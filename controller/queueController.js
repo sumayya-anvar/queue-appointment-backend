@@ -13,6 +13,12 @@ const getQueue = async (req, res, next) => {
       Queue.findOne({ doctor, date: range.start }),
       Appointment.find({ doctor, date: { $gte: range.start, $lt: range.end } }).populate("patient", "fullName").sort({ tokenNumber: 1 }),
     ]);
+    if (req.user.role === "patient") {
+      return res.json({
+        queue: queue || { doctor, date: range.start, currentToken: 0, lastToken: 0, waitingCount: 0 },
+        appointments: appointments.map((appointment) => ({ tokenNumber: appointment.tokenNumber, timeSlot: appointment.timeSlot, status: appointment.status })),
+      });
+    }
     res.json({ queue: queue || { doctor, date: range.start, currentToken: 0, lastToken: 0, waitingCount: 0 }, appointments });
   } catch (error) { next(error); }
 };

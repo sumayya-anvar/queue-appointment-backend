@@ -6,14 +6,15 @@ const register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
     const normalizedEmail = email?.trim().toLowerCase();
-    const normalizedRole = role?.toLowerCase();
+    const requestedRole = role?.toLowerCase();
 
     if (!fullName?.trim() || !normalizedEmail || !password || password.length < 8) {
       return res.status(400).json({ message: "fullName, email, and a password of at least 8 characters are required" });
     }
-    if (normalizedRole && !["admin", "doctor", "staff", "patient"].includes(normalizedRole)) {
+    if (requestedRole && !["admin", "doctor", "staff", "patient"].includes(requestedRole)) {
       return res.status(400).json({ message: "Invalid role" });
     }
+    const normalizedRole = process.env.ALLOW_PUBLIC_STAFF_REGISTRATION === "true" ? (requestedRole || "patient") : "patient";
 
     const existingUser = await User.findOne({ email: normalizedEmail });
 
@@ -29,7 +30,7 @@ const register = async (req, res) => {
       fullName,
       email: normalizedEmail,
       password: hashedPassword,
-      role: normalizedRole || "patient",
+      role: normalizedRole,
     });
 
     res.status(201).json({
@@ -55,7 +56,7 @@ const login = async (req, res) => {
     const normalizedEmail = email?.trim().toLowerCase();
     if (!normalizedEmail || !password) return res.status(400).json({ message: "email and password are required" });
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
     if (!user) {
       return res.status(401).json({

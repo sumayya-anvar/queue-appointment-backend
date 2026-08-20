@@ -8,6 +8,8 @@ Create `backend/.env` with:
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/queue-management
 JWT_SECRET=replace-with-a-long-random-secret
+# Set to true only briefly when you need public registration of admin/doctor/staff accounts.
+ALLOW_PUBLIC_STAFF_REGISTRATION=false
 ```
 
 Then run:
@@ -40,5 +42,10 @@ Authorization: Bearer <token>
 | Notifications | `GET /api/notifications` | Lists the current user's notifications. |
 | Notifications | `POST /api/notifications` | Creates a notification for the current user: `type`, `message`. |
 | Notifications | `PATCH /api/notifications/:id/read` | Marks one of the current user's notifications as read. |
+| Users | `GET /api/users/doctors` | Returns the available doctors for appointment booking. |
+| Users | `GET` / `PATCH /api/users/me` | Retrieves or updates the signed-in user profile. Password changes require `currentPassword` and `newPassword`. |
+| Users | `POST /api/users` | Admin-only creation of an admin, doctor, or staff account. |
 
 Valid appointment statuses are `Pending`, `Confirmed`, `Waiting`, `In Consultation`, `Completed`, `Cancelled`, and `No Show`.
+
+For security, public registration always creates a patient account unless `ALLOW_PUBLIC_STAFF_REGISTRATION=true` is explicitly set. Use an admin account and `POST /api/users` to provision doctors and staff in normal operation.
